@@ -1,0 +1,9 @@
+.vscode
+.history/
+*.vsix
+.idea
+*.iml
+out
+gen
+
+multi
