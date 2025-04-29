@@ -1,3 +1,131 @@
 // devLib
 // Library for dev containing some helpers. To be imported
-//
+// helpers:
+// - findMap: find a given map into a list
+// - createCli: return a cli object allowing you to generate args from params and --help
+
+devLib = {}
+
+devLib.findMap = function(listOrMap, mapToFind)
+	itemFound = null
+	for item in listOrMap
+		found = false
+		for attr in mapToFind.indexes
+			if item.hasIndex(attr) then
+				found = item[attr] == mapToFind[attr]
+			end if
+			if not found then break
+		end for
+		if found then
+			itemFound = item
+			break
+		end if
+	end for
+	return itemFound
+end function
+
+
+// cliDef = {
+// "usage": "foocli -f /lib [options]",
+// "argsDef": [
+// {
+// "name": "help",
+// "alias": "h",
+// "description": "Display help message",
+// },
+// {
+// "name": "foo",
+// "alias": "f",
+// "required": false,
+// "hasValue": true,
+// },
+// {
+// "name": "bar",
+// "alias": "b",
+// "hasValue": true,
+// "defaultValue": "toto.txt",
+// },
+// ],
+// "description": "Test of a description",
+// }
+// 
+// cli = devLib.createCli(cliDef)
+// args = cli.getArgs
+devLib.createCli = function(cliDef)
+	cli = {}
+	defaultArgu = {
+		"name": "",
+		"alias": "",
+		"hasValue": false,
+		"defaultValue": "",
+		"required": false,
+		"value": "Optionnal",
+		"description": "",
+	}
+
+	getHelpMessage = function
+		message = "<b>Usage: " + cliDef.usage + char(10) + char(10)
+		optionsStr = "OPTION ALIAS VALUE DESCRIPTION"
+		for argDef in cliDef.argsDef
+			arg = defaultArgu + argDef
+			if arg.hasValue then
+				if arg.defaultValue then
+					arg.value = arg.defaultValue
+				else if arg.required then
+					arg.value = "Required"
+				end if
+			end if
+			optionsStr = "" + optionsStr + char(10) + "--" + arg.name + " " + "-" + arg.alias + " " + arg.value + " " + arg.description.replace(" ", "___")
+		end for
+		message = "" + message + format_columns(optionsStr)
+		message = message.replace("___", " ")
+		if cliDef.hasIndex("description") then
+			message = "" + message + "\n\nDescription\n-----------\n" + cliDef.description
+		end if
+		return message
+	end function
+
+	exitError = function
+		exit(getHelpMessage)
+	end function
+
+	getArgs = function
+		args = {}
+
+		findParamIndex = function(argDef)
+			index = params.indexOf("--" + argDef.name)
+			if index == null then
+				if argDef.hasIndex("alias") then index = params.indexOf("-" + argDef.alias)
+			end if
+			return index
+		end function
+
+		for argDef in cliDef.argsDef
+			if argDef.hasIndex("required") and argDef.required and params.indexOf("--" + argDef.name) == null then
+				if argDef.hasIndex("alias") and argDef.alias and params.indexOf("-" + argDef.alias) == null then cli.exitError
+			end if
+
+			paramIndex = findParamIndex(argDef)
+			if paramIndex != null then
+				if argDef.hasIndex("hasValue") and argDef.hasValue then
+					if paramIndex < params.len - 1 and params[paramIndex + 1][0] != "-" then
+						args[argDef.name] = params[paramIndex + 1]
+					else
+						if not argDef.hasIndex("defaultValue") then cli.exitError
+						args[argDef.name] = argDef.defaultValue
+					end if
+				else
+					args[argDef.name] = true
+				end if
+			else
+				args[argDef.name] = null
+			end if
+		end for
+		return args
+	end function
+
+	cli.getArgs = @getArgs
+	cli.exitError = @exitError
+	cli.helpMessage = getHelpMessage
+	return cli
+end function
