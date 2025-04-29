@@ -1,0 +1,43 @@
+// bin-ln-auto
+// Automatically parse every file in the given folder
+// For every binary create a symlink in /bin
+
+
+// init and import
+hostComputer = get_shell.host_computer
+
+
+// functions
+helpAndExit = function
+	exit("<b>usage: bin-ln-auto [path=~/dev/bin]\n create a symlink in /bin for every binary in folder</b>\n")
+end function
+
+parseAndLink = function(folder)
+	if folder.is_folder == 1 then
+		files = folder.get_files
+		folders = folder.get_folders
+		for file in files
+			if file.is_binary == 1 then
+				symResult = file.symlink("/bin", file.name)
+				if typeof(symResult) == "string" then
+					print(file.name + " : " + symResult)
+				end if
+			end if
+		end for
+		for fold in folders
+			parseAndLink(fold)
+		end for
+	end if
+end function
+
+
+// main
+if params.len == 1 and (params[0] == "-h" or params[0] == "--help") then
+	helpAndExit
+end if
+
+path = home_dir + "/dev/bin"
+if params.len == 1 then path = params[0]
+
+folder = hostComputer.File(path)
+parseAndLink(folder)
