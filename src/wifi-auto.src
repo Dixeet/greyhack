@@ -1,0 +1,109 @@
+// wifi-auto
+// Prompt and automatically hack selected wifi network
+// If a path is given, all wifi network available will be hacked and dump into the file
+
+
+// init and import
+crypto = include_lib("/lib/crypto.so")
+hostComputer = get_shell.host_computer
+computerNetworkDevices = hostComputer.network_devices
+
+
+// functions
+findWifiPassword = function(network)
+	pwr = network.power[ : -1].to_int
+	potentialAcks = 300000 / (pwr + 15)
+	crypto.airmon("start", network.device)
+	print(network.bssid + " " + network.essid + " " + round(potentialAcks) + " ACKs\n--------")
+	crypto.aireplay(network.bssid, network.essid, potentialAcks)
+	crypto.airmon("stop", network.device)
+	network.password = crypto.aircrack(current_path + "/file.cap")
+	hostComputer.File(current_path + "/file.cap").delete
+	return network
+end function
+
+formatResults = function(networks = [])
+	str = "ESSID BSSID PASSWORD POWER DEVICE"
+	for network in networks
+		str = str + "\n" + network.essid + " " + network.bssid + " " + network.password + " " + network.power + " " + network.device
+	end for
+	return format_columns(str)
+end function
+
+helpAndExit = function
+	exit("<b>wifi-auto [/dump/file/path]\nIf a path is given, all networks will be hacked and results will be dump into the file\nIf not select a network to hack</b>\n")
+end function
+
+
+// main
+if params.len == 1 and (params[0] == "-h" or params[0] == "--help") then
+	helpAndExit
+end if
+
+deviceNames = []
+allNetworks = []
+deviceList = computerNetworkDevices.split(char(10))
+
+for device in deviceList
+	deviceName = device.split(" ")[0]
+	if deviceName != "" then deviceNames.push(deviceName)
+end for
+
+networksSelectStr = "# BSSID PWR ESSID DEVICE"
+i = 0
+for deviceName in deviceNames
+	networks = get_shell.host_computer.wifi_networks(deviceName)
+	for network in networks
+		networksSelectStr = networksSelectStr + "\n" + i + ". " + network + " " + deviceName
+		splitNetwork = network.split(" ")
+		network = {
+			"bssid": splitNetwork[0],
+			"power": splitNetwork[1],
+			"essid": splitNetwork[2],
+			"device": deviceName,
+			"password": "",
+		}
+		allNetworks.push(network)
+		i = 1 + i
+	end for
+end for
+
+print(format_columns(networksSelectStr))
+
+if params.len != 1 then
+	selectedIndex = user_input("\nSelect Wifi: ").to_int
+
+	if typeof(selectedIndex) == "string" or selectedIndex < 0 or selectedIndex > allNetworks.len - 1 then
+		exit("Wrong index selection!")
+	end if
+
+	print("\n========\n" + formatResults([ findWifiPassword(allNetworks[selectedIndex]) ]))
+	print("")
+else
+	parse = params[0].split("/")
+	path = parse[ : -1].join("/")
+	file = parse[parse.len - 1]
+
+	createFile = hostComputer.touch(path, file)
+	if typeof(createFile) == "string" then
+		print(createFile)
+	end if
+
+	content = ""
+	results = []
+	file = hostComputer.File(params[0])
+	i = 0
+	for network in allNetworks
+		i = 1 + i
+		print("\nHack n°" + i + "/" + allNetworks.len)
+		results.push(findWifiPassword(network))
+		content = formatResults(results)
+		setContent = file.set_content(content)
+		if typeof(setContent) == "string" then
+			print(setContent)
+		end if
+		print("\n========\n" + content)
+		print("")
+	end for
+end if
+exit
