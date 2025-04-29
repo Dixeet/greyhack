@@ -5,13 +5,33 @@
 
 // init and import
 hostComputer = get_shell.host_computer
+import_code("/home/lilo/dev/src/dev-lib.src")
 
+cliDef = {
+	"usage": "bin-ln-auto -s /home/foobar/dev/bin",
+	"argsDef": [
+		{
+			"name": "help",
+			"alias": "h",
+			"description": "Display help message",
+		},
+		{
+			"name": "source",
+			"alias": "s",
+			"hasValue": true,
+			"defaultValue": "/dev/bin",
+			"description": "Bin source folder path",
+		},
+	],
+	"description": "Create a symlink in /bin for every binary in folder",
+}
+
+cli = devLib.createCli(cliDef)
+args = cli.getArgs
+
+if args.help then cli.exitError
 
 // functions
-helpAndExit = function
-	exit("<b>usage: bin-ln-auto [path=~/dev/bin]\n create a symlink in /bin for every binary in folder</b>\n")
-end function
-
 parseAndLink = function(folder)
 	if folder.is_folder == 1 then
 		files = folder.get_files
@@ -32,12 +52,8 @@ end function
 
 
 // main
-if params.len == 1 and (params[0] == "-h" or params[0] == "--help") then
-	helpAndExit
-end if
-
 path = home_dir + "/dev/bin"
-if params.len == 1 then path = params[0]
+if args.source then path = args.source
 
 folder = hostComputer.File(path)
 parseAndLink(folder)

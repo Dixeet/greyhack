@@ -11,23 +11,41 @@ end if
 if not metaxploit then
 	exit("Can't find metaxploit.so in /lib folder or current folder.")
 end if
+import_code("/home/lilo/dev/src/dev-lib.src")
+
+cliDef = {
+	"usage": "version-auto [-f path]",
+	"argsDef": [
+		{
+			"name": "help",
+			"alias": "h",
+			"description": "Display help message",
+		},
+		{
+			"name": "file",
+			"alias": "f",
+			"hasValue": true,
+			"description": "Lib file to scan, absolute or in current folder",
+		},
+	],
+	"description": "If a path is given, given lib will be scan, if not all libs in /lib will be scan",
+}
+
+cli = devLib.createCli(cliDef)
+args = cli.getArgs
+
+if args.help then cli.exitError
 
 
 // functions
-helpAndExit = function
-	exit("<b>usage: version-auto [path]\nIf a path is given, given lib will be scan, if not all libs in /lib will be scan</b>\n")
-end function
 
 
 // main
-if params.len == 1 and (params[0] == "-h" or params[0] == "--help") then
-	helpAndExit
-end if
 
-if params.len == 1 then
-	lib = metaxploit.load(params[0])
+if args.file then
+	lib = metaxploit.load(current_path + "/" + args.file)
 	if not lib then
-		lib = metaxploit.load("/lib/" + params[0])
+		lib = metaxploit.load("/lib/" + args.file)
 		if not lib then
 			exit("No lib given found in current path or /lib")
 		end if

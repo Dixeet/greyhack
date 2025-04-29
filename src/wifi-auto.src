@@ -8,6 +8,32 @@ crypto = include_lib("/lib/crypto.so")
 hostComputer = get_shell.host_computer
 computerNetworkDevices = hostComputer.network_devices
 
+import_code("/home/lilo/dev/src/dev-lib.src")
+
+cliDef = {
+	"usage": "wifi-auto [-o /dump/file/path]",
+	"argsDef": [
+		{
+			"name": "help",
+			"alias": "h",
+			"description": "Display help message",
+		},
+		{
+			"name": "output",
+			"alias": "o",
+			"hasValue": true,
+			"description": "Dump file path, absolute or current folder",
+		},
+	],
+	"description": "If a path is given, all networks will be hacked and results will be dump into the file\nIf not select a network to hack",
+}
+
+cli = devLib.createCli(cliDef)
+args = cli.getArgs
+
+if args.help then cli.exitError
+
+
 
 // functions
 findWifiPassword = function(network)
@@ -30,16 +56,8 @@ formatResults = function(networks = [])
 	return format_columns(str)
 end function
 
-helpAndExit = function
-	exit("<b>wifi-auto [/dump/file/path]\nIf a path is given, all networks will be hacked and results will be dump into the file\nIf not select a network to hack</b>\n")
-end function
-
 
 // main
-if params.len == 1 and (params[0] == "-h" or params[0] == "--help") then
-	helpAndExit
-end if
-
 deviceNames = []
 allNetworks = []
 deviceList = computerNetworkDevices.split(char(10))
@@ -70,7 +88,7 @@ end for
 
 print(format_columns(networksSelectStr))
 
-if params.len != 1 then
+if args.output == null then
 	selectedIndex = user_input("\nSelect Wifi: ").to_int
 
 	if typeof(selectedIndex) == "string" or selectedIndex < 0 or selectedIndex > allNetworks.len - 1 then
@@ -80,8 +98,9 @@ if params.len != 1 then
 	print("\n========\n" + formatResults([ findWifiPassword(allNetworks[selectedIndex]) ]))
 	print("")
 else
-	parse = params[0].split("/")
+	parse = args.output.split("/")
 	path = parse[ : -1].join("/")
+	if not path then path = current_path
 	file = parse[parse.len - 1]
 
 	createFile = hostComputer.touch(path, file)
@@ -91,7 +110,7 @@ else
 
 	content = ""
 	results = []
-	file = hostComputer.File(params[0])
+	file = hostComputer.File(args.output)
 	i = 0
 	for network in allNetworks
 		i = 1 + i
