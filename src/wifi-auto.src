@@ -8,7 +8,7 @@ crypto = include_lib("/lib/crypto.so")
 hostComputer = get_shell.host_computer
 computerNetworkDevices = hostComputer.network_devices
 
-import_code("/home/lilo/dev/src/dev-lib.src")
+import_code("dev-lib.src")
 
 cliDef = {
 	"usage": "wifi-auto [-o /dump/file/path]",
@@ -37,8 +37,7 @@ if args.help then cli.exitError
 
 // functions
 findWifiPassword = function(network)
-	pwr = network.power[ : -1].to_int
-	potentialAcks = 300000 / (pwr + 15)
+	potentialAcks = 300000 / (network.power + 15)
 	crypto.airmon("start", network.device)
 	print(network.bssid + " " + network.essid + " " + round(potentialAcks) + " ACKs\n--------")
 	crypto.aireplay(network.bssid, network.essid, potentialAcks)
@@ -67,29 +66,33 @@ for device in deviceList
 	if deviceName != "" then deviceNames.push(deviceName)
 end for
 
-networksSelectStr = "# BSSID PWR ESSID DEVICE"
-i = 0
+networksSelectStr = "# PWR% ESSID BSSID DEVICE"
 for deviceName in deviceNames
 	networks = get_shell.host_computer.wifi_networks(deviceName)
 	for network in networks
-		networksSelectStr = networksSelectStr + "\n" + i + ". " + network + " " + deviceName
 		splitNetwork = network.split(" ")
 		network = {
 			"bssid": splitNetwork[0],
-			"power": splitNetwork[1],
+			"power": splitNetwork[1][ : -1].to_int,
 			"essid": splitNetwork[2],
 			"device": deviceName,
 			"password": "",
 		}
 		allNetworks.push(network)
-		i = 1 + i
 	end for
+end for
+allNetworks.sort("power", 0)
+i = 1
+for network in allNetworks
+	networkStr = network.power + " " + network.essid + " " + network.bssid + " " + network.device
+	networksSelectStr = networksSelectStr + "\n" + i + ". " + networkStr
+	i = 1 + i
 end for
 
 print(format_columns(networksSelectStr))
 
 if args.output == null then
-	selectedIndex = user_input("\nSelect Wifi: ").to_int
+	selectedIndex = user_input("\nSelect Wifi: ").to_int - 1
 
 	if typeof(selectedIndex) == "string" or selectedIndex < 0 or selectedIndex > allNetworks.len - 1 then
 		exit("Wrong index selection!")

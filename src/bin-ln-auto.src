@@ -5,7 +5,7 @@
 
 // init and import
 hostComputer = get_shell.host_computer
-import_code("/home/lilo/dev/src/dev-lib.src")
+import_code("dev-lib.src")
 
 cliDef = {
 	"usage": "bin-ln-auto -s /home/foobar/dev/bin",
@@ -19,7 +19,7 @@ cliDef = {
 			"name": "source",
 			"alias": "s",
 			"hasValue": true,
-			"defaultValue": "/dev/bin",
+			"defaultValue": "~/src/dev/",
 			"description": "Bin source folder path",
 		},
 	],
@@ -52,7 +52,7 @@ end function
 
 
 // main
-path = home_dir + "/dev/bin"
+path = home_dir + "/src/dev"
 if args.source then path = args.source
 
 folder = hostComputer.File(path)
