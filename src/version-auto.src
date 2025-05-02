@@ -11,7 +11,7 @@ end if
 if not metaxploit then
   exit("Can't find metaxploit.so in /lib folder or current folder.")
 end if
-import_code("dev-lib.src")
+import_code("dev-lib/dev-lib.src")
 
 cliDef = {
   "argsDef": [ {

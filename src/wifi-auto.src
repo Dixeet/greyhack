@@ -8,7 +8,7 @@ crypto = include_lib("/lib/crypto.so")
 hostComputer = get_shell.host_computer
 computerNetworkDevices = hostComputer.network_devices
 
-import_code("dev-lib.src")
+import_code("dev-lib/dev-lib.src")
 
 cliDef = {
   "argsDef": [ {

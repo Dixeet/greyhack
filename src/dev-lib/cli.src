@@ -1,31 +1,3 @@
-// devLib
-// Library for dev containing some helpers. To be imported
-// helpers:
-// - findMap: find a given map into a list
-// - createCli: return a cli object allowing you to generate args from params and --help
-
-devLib = {}
-
-findMap = function(mapToFind)
-  itemFound = null
-  for item in self.values
-    found = false
-    for attr in mapToFind.indexes
-      if item.hasIndex(attr) then
-        found = item[attr] == mapToFind[attr]
-      end if
-      if not found then break
-    end for
-    if found then
-      itemFound = item
-      break
-    end if
-  end for
-  return itemFound
-end function
-list.findMap = @findMap
-map.findMap = @findMap
-
 // // Example CLI
 // cliDef = {
 // "description": "Examples:\n<b>  foocli bar.txt \n  foocli --foo /foobar",
@@ -181,5 +153,3 @@ Cli.init = function(cliDef)
   cli.helpMessage = getHelpMessage
   return cli
 end function
-
-devLib.Cli = Cli

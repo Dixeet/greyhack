@@ -5,7 +5,7 @@
 
 // init and import
 hostComputer = get_shell.host_computer
-import_code("dev-lib.src")
+import_code("dev-lib/dev-lib.src")
 
 cliDef = {
   "argsDef": [ {
