@@ -80,7 +80,7 @@ Cli.init = function(cliDef)
         opt = defaultOption + optDef
         optionsStr = optionsStr + char(10) + "--" + opt.name + " " + "-" + opt.alias + " "
         if opt.arg then
-          optionsStr += devLib.Cli.formatArg(opt.arg)
+          optionsStr += Cli.formatArg(opt.arg)
         else
           optionsStr += "°"
         end if
@@ -142,6 +142,15 @@ Cli.init = function(cliDef)
           cliArgs[arg.name] = arg.default
         else
           exit("<" + arg.name + "> argument needs a value")
+        end if
+      end if
+    end for
+    for option in cliDef.optionsDef
+      if not cliArgs.hasIndex(option.name) or not cliArgs[option.name] then
+        if option.hasIndex("default") then
+          cliArgs[option.name] = option.default
+        else
+          cliArgs[option.name] = null
         end if
       end if
     end for
