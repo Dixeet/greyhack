@@ -11,27 +11,21 @@ computerNetworkDevices = hostComputer.network_devices
 import_code("dev-lib.src")
 
 cliDef = {
-	"usage": "wifi-auto [-o /dump/file/path]",
-	"argsDef": [
-		{
-			"name": "help",
-			"alias": "h",
-			"description": "Display help message",
-		},
-		{
-			"name": "output",
-			"alias": "o",
-			"hasValue": true,
-			"description": "Dump file path, absolute or current folder",
-		},
-	],
+	"argsDef": [ {
+		"name": "output",
+		"description": "Output dump file path, absolute or current folder",
+		"default": "",
+	} ],
+	"optionsDef": [ {
+		"name": "help",
+		"alias": "h",
+		"description": "Display help message",
+	} ],
 	"description": "If a path is given, all networks will be hacked and results will be dump into the file\nIf not select a network to hack",
 }
-
-cli = devLib.createCli(cliDef)
-args = cli.getArgs
-
-if args.help then cli.exitError
+cliDef.usage = "wifi-auto [--options] " + devLib.Cli.formatArg(cliDef.argsDef[0])
+cli = devLib.Cli.init(cliDef)
+args = cli.args
 
 
 
@@ -91,7 +85,7 @@ end for
 
 print(format_columns(networksSelectStr))
 
-if args.output == null then
+if args.output == "" then
 	selectedIndex = user_input("\nSelect Wifi: ").to_int - 1
 
 	if typeof(selectedIndex) == "string" or selectedIndex < 0 or selectedIndex > allNetworks.len - 1 then

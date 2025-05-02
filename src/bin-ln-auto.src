@@ -8,28 +8,21 @@ hostComputer = get_shell.host_computer
 import_code("dev-lib.src")
 
 cliDef = {
-	"usage": "bin-ln-auto -s /home/foobar/dev/bin",
-	"argsDef": [
-		{
-			"name": "help",
-			"alias": "h",
-			"description": "Display help message",
-		},
-		{
-			"name": "source",
-			"alias": "s",
-			"hasValue": true,
-			"defaultValue": "~/src/dev/",
-			"description": "Bin source folder path",
-		},
-	],
+	"argsDef": [ {
+		"name": "source",
+		"description": "Bin source folder path",
+		"default": home_dir + "/src/dev",
+	} ],
+	"optionsDef": [ {
+		"name": "help",
+		"alias": "h",
+		"description": "Display help message",
+	} ],
 	"description": "Create a symlink in /bin for every binary in folder",
 }
-
-cli = devLib.createCli(cliDef)
-args = cli.getArgs
-
-if args.help then cli.exitError
+cliDef.usage = "bin-ln-auto [--options] " + devLib.Cli.formatArg(cliDef.argsDef[0])
+cli = devLib.Cli.init(cliDef)
+args = cli.args
 
 // functions
 parseAndLink = function(folder)
@@ -54,6 +47,6 @@ end function
 // main
 path = home_dir + "/src/dev"
 if args.source then path = args.source
-
 folder = hostComputer.File(path)
+if folder == null or not folder.is_folder then exit("source path is not a folder")
 parseAndLink(folder)
