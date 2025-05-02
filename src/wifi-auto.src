@@ -11,17 +11,17 @@ computerNetworkDevices = hostComputer.network_devices
 import_code("dev-lib.src")
 
 cliDef = {
-	"argsDef": [ {
-		"name": "output",
-		"description": "Output dump file path, absolute or current folder",
-		"default": "",
-	} ],
-	"optionsDef": [ {
-		"name": "help",
-		"alias": "h",
-		"description": "Display help message",
-	} ],
-	"description": "If a path is given, all networks will be hacked and results will be dump into the file\nIf not select a network to hack",
+  "argsDef": [ {
+    "name": "output",
+    "description": "Output dump file path, absolute or current folder",
+    "default": "",
+  } ],
+  "optionsDef": [ {
+    "name": "help",
+    "alias": "h",
+    "description": "Display help message",
+  } ],
+  "description": "If a path is given, all networks will be hacked and results will be dump into the file\nIf not select a network to hack",
 }
 cliDef.usage = "wifi-auto [--options] " + devLib.Cli.formatArg(cliDef.argsDef[0])
 cli = devLib.Cli.init(cliDef)
@@ -31,22 +31,22 @@ args = cli.args
 
 // functions
 findWifiPassword = function(network)
-	potentialAcks = 300000 / (network.power + 15)
-	crypto.airmon("start", network.device)
-	print(network.bssid + " " + network.essid + " " + round(potentialAcks) + " ACKs\n--------")
-	crypto.aireplay(network.bssid, network.essid, potentialAcks)
-	crypto.airmon("stop", network.device)
-	network.password = crypto.aircrack(current_path + "/file.cap")
-	hostComputer.File(current_path + "/file.cap").delete
-	return network
+  potentialAcks = 300000 / (network.power + 15)
+  crypto.airmon("start", network.device)
+  print(network.bssid + " " + network.essid + " " + round(potentialAcks) + " ACKs\n--------")
+  crypto.aireplay(network.bssid, network.essid, potentialAcks)
+  crypto.airmon("stop", network.device)
+  network.password = crypto.aircrack(current_path + "/file.cap")
+  hostComputer.File(current_path + "/file.cap").delete
+  return network
 end function
 
 formatResults = function(networks = [])
-	str = "ESSID BSSID PASSWORD POWER DEVICE"
-	for network in networks
-		str = str + "\n" + network.essid + " " + network.bssid + " " + network.password + " " + network.power + " " + network.device
-	end for
-	return format_columns(str)
+  str = "ESSID BSSID PASSWORD POWER DEVICE"
+  for network in networks
+    str = str + "\n" + network.essid + " " + network.bssid + " " + network.password + " " + network.power + " " + network.device
+  end for
+  return format_columns(str)
 end function
 
 
@@ -56,70 +56,70 @@ allNetworks = []
 deviceList = computerNetworkDevices.split(char(10))
 
 for device in deviceList
-	deviceName = device.split(" ")[0]
-	if deviceName != "" then deviceNames.push(deviceName)
+  deviceName = device.split(" ")[0]
+  if deviceName != "" then deviceNames.push(deviceName)
 end for
 
 networksSelectStr = "# PWR% ESSID BSSID DEVICE"
 for deviceName in deviceNames
-	networks = get_shell.host_computer.wifi_networks(deviceName)
-	for network in networks
-		splitNetwork = network.split(" ")
-		network = {
-			"bssid": splitNetwork[0],
-			"power": splitNetwork[1][ : -1].to_int,
-			"essid": splitNetwork[2],
-			"device": deviceName,
-			"password": "",
-		}
-		allNetworks.push(network)
-	end for
+  networks = get_shell.host_computer.wifi_networks(deviceName)
+  for network in networks
+    splitNetwork = network.split(" ")
+    network = {
+      "bssid": splitNetwork[0],
+      "power": splitNetwork[1][ : -1].to_int,
+      "essid": splitNetwork[2],
+      "device": deviceName,
+      "password": "",
+    }
+    allNetworks.push(network)
+  end for
 end for
 allNetworks.sort("power", 0)
 i = 1
 for network in allNetworks
-	networkStr = network.power + " " + network.essid + " " + network.bssid + " " + network.device
-	networksSelectStr = networksSelectStr + "\n" + i + ". " + networkStr
-	i = 1 + i
+  networkStr = network.power + " " + network.essid + " " + network.bssid + " " + network.device
+  networksSelectStr = networksSelectStr + "\n" + i + ". " + networkStr
+  i = 1 + i
 end for
 
 print(format_columns(networksSelectStr))
 
 if args.output == "" then
-	selectedIndex = user_input("\nSelect Wifi: ").to_int - 1
+  selectedIndex = user_input("\nSelect Wifi: ").to_int - 1
 
-	if typeof(selectedIndex) == "string" or selectedIndex < 0 or selectedIndex > allNetworks.len - 1 then
-		exit("Wrong index selection!")
-	end if
+  if typeof(selectedIndex) == "string" or selectedIndex < 0 or selectedIndex > allNetworks.len - 1 then
+    exit("Wrong index selection!")
+  end if
 
-	print("\n========\n" + formatResults([ findWifiPassword(allNetworks[selectedIndex]) ]))
-	print("")
+  print("\n========\n" + formatResults([ findWifiPassword(allNetworks[selectedIndex]) ]))
+  print("")
 else
-	parse = args.output.split("/")
-	path = parse[ : -1].join("/")
-	if not path then path = current_path
-	file = parse[parse.len - 1]
+  parse = args.output.split("/")
+  path = parse[ : -1].join("/")
+  if not path then path = current_path
+  file = parse[parse.len - 1]
 
-	createFile = hostComputer.touch(path, file)
-	if typeof(createFile) == "string" then
-		print(createFile)
-	end if
+  createFile = hostComputer.touch(path, file)
+  if typeof(createFile) == "string" then
+    print(createFile)
+  end if
 
-	content = ""
-	results = []
-	file = hostComputer.File(args.output)
-	i = 0
-	for network in allNetworks
-		i = 1 + i
-		print("\nHack n°" + i + "/" + allNetworks.len)
-		results.push(findWifiPassword(network))
-		content = formatResults(results)
-		setContent = file.set_content(content)
-		if typeof(setContent) == "string" then
-			print(setContent)
-		end if
-		print("\n========\n" + content)
-		print("")
-	end for
+  content = ""
+  results = []
+  file = hostComputer.File(args.output)
+  i = 0
+  for network in allNetworks
+    i = 1 + i
+    print("\nHack n°" + i + "/" + allNetworks.len)
+    results.push(findWifiPassword(network))
+    content = formatResults(results)
+    setContent = file.set_content(content)
+    if typeof(setContent) == "string" then
+      print(setContent)
+    end if
+    print("\n========\n" + content)
+    print("")
+  end for
 end if
 exit

@@ -8,17 +8,17 @@ hostComputer = get_shell.host_computer
 import_code("dev-lib.src")
 
 cliDef = {
-	"argsDef": [ {
-		"name": "source",
-		"description": "Bin source folder path",
-		"default": home_dir + "/src/dev",
-	} ],
-	"optionsDef": [ {
-		"name": "help",
-		"alias": "h",
-		"description": "Display help message",
-	} ],
-	"description": "Create a symlink in /bin for every binary in folder",
+  "argsDef": [ {
+    "name": "source",
+    "description": "Bin source folder path",
+    "default": home_dir + "/src/dev",
+  } ],
+  "optionsDef": [ {
+    "name": "help",
+    "alias": "h",
+    "description": "Display help message",
+  } ],
+  "description": "Create a symlink in /bin for every binary in folder",
 }
 cliDef.usage = "bin-ln-auto [--options] " + devLib.Cli.formatArg(cliDef.argsDef[0])
 cli = devLib.Cli.init(cliDef)
@@ -26,21 +26,21 @@ args = cli.args
 
 // functions
 parseAndLink = function(folder)
-	if folder.is_folder == 1 then
-		files = folder.get_files
-		folders = folder.get_folders
-		for file in files
-			if file.is_binary == 1 then
-				symResult = file.symlink("/bin", file.name)
-				if typeof(symResult) == "string" then
-					print(file.name + " : " + symResult)
-				end if
-			end if
-		end for
-		for fold in folders
-			parseAndLink(fold)
-		end for
-	end if
+  if folder.is_folder == 1 then
+    files = folder.get_files
+    folders = folder.get_folders
+    for file in files
+      if file.is_binary == 1 then
+        symResult = file.symlink("/bin", file.name)
+        if typeof(symResult) == "string" then
+          print(file.name + " : " + symResult)
+        end if
+      end if
+    end for
+    for fold in folders
+      parseAndLink(fold)
+    end for
+  end if
 end function
 
 

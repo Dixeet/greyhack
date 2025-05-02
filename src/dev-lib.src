@@ -7,26 +7,26 @@
 devLib = {}
 
 findMap = function(mapToFind)
-	itemFound = null
-	for item in self.values
-		found = false
-		for attr in mapToFind.indexes
-			if item.hasIndex(attr) then
-				found = item[attr] == mapToFind[attr]
-			end if
-			if not found then break
-		end for
-		if found then
-			itemFound = item
-			break
-		end if
-	end for
-	return itemFound
+  itemFound = null
+  for item in self.values
+    found = false
+    for attr in mapToFind.indexes
+      if item.hasIndex(attr) then
+        found = item[attr] == mapToFind[attr]
+      end if
+      if not found then break
+    end for
+    if found then
+      itemFound = item
+      break
+    end if
+  end for
+  return itemFound
 end function
 list.findMap = @findMap
 map.findMap = @findMap
 
-// Example CLI
+// // Example CLI
 // cliDef = {
 // "description": "Examples:\n<b>  foocli bar.txt \n  foocli --foo /foobar",
 // "argsDef": [
@@ -39,6 +39,7 @@ map.findMap = @findMap
 // "default": "/out/",
 // "description": "Path of output",
 // },
+// {
 // "name": "not_mandatory",
 // "default": "",
 // "description": "if default='' and no value given, arg will be = ''",
@@ -68,117 +69,117 @@ map.findMap = @findMap
 // args = cli.args
 Cli = {}
 Cli.formatArg = function(arg)
-	arg = { "default": null } + arg
-	str = "<" + arg.name
-	// if arg.default then str = str + "(dflt=" + arg.default
-	str += ">"
-	if arg.default != null then str = "[" + str + "]"
-	return str
+  arg = { "default": null } + arg
+  str = "<" + arg.name
+  // if arg.default then str = str + "(dflt=" + arg.default
+  str += ">"
+  if arg.default != null then str = "[" + str + "]"
+  return str
 end function
 Cli.init = function(cliDef)
-	cli = {}
-	defaultOption = {
-		"name": "",
-		"alias": "",
-		"arg": null,
-		"description": "",
-	}
-	defaultArg = {
-		"name": "",
-		"description": "",
-		"default": null,
-	}
+  cli = {}
+  defaultOption = {
+    "name": "",
+    "alias": "",
+    "arg": null,
+    "description": "",
+  }
+  defaultArg = {
+    "name": "",
+    "description": "",
+    "default": null,
+  }
 
-	getHelpMessage = function
-		message = "<b>Usage: " + cliDef.usage + char(10)
-		if cliDef.hasIndex("argsDef") and cliDef.argsDef.len > 0 then
-			argStr = ""
-			for argDef in cliDef.argsDef
-				arg = defaultArg + argDef
-				if arg.default != null and arg.default != "" then arg.description = arg.description + " [default: " + arg.default + "]"
-				argStr = argStr + char(10) + Cli.formatArg(arg) + " " + arg.description.replace(" ", "¨")
-			end for
-			message += format_columns(argStr)
-			message = message.replace("¨", " ") + char(10)
-		end if
-		if cliDef.hasIndex("optionsDef") and cliDef.optionsDef.len > 0 then
-			optionsStr = ""
-			for optDef in cliDef.optionsDef
-				opt = defaultOption + optDef
-				optionsStr = optionsStr + char(10) + "--" + opt.name + " " + "-" + opt.alias + " "
-				if opt.arg then
-					optionsStr += devLib.Cli.formatArg(opt.arg)
-				else
-					optionsStr += "°"
-				end if
-				optionsStr = optionsStr + " " + opt.description.replace(" ", "¨")
-			end for
-			message += format_columns(optionsStr)
-			message = message.replace("¨", " ")
-			message = message.replace("°", " ")
-		end if
-		if cliDef.hasIndex("description") then
-			message = message + "\n\nDescription\n-----------\n" + cliDef.description
-		end if
-		return message
-	end function
+  getHelpMessage = function
+    message = "<b>Usage: " + cliDef.usage + char(10)
+    if cliDef.hasIndex("argsDef") and cliDef.argsDef.len > 0 then
+      argStr = ""
+      for argDef in cliDef.argsDef
+        arg = defaultArg + argDef
+        if arg.default != null and arg.default != "" then arg.description = arg.description + " [default: " + arg.default + "]"
+        argStr = argStr + char(10) + Cli.formatArg(arg) + " " + arg.description.replace(" ", "¨")
+      end for
+      message += format_columns(argStr)
+      message = message.replace("¨", " ") + char(10)
+    end if
+    if cliDef.hasIndex("optionsDef") and cliDef.optionsDef.len > 0 then
+      optionsStr = ""
+      for optDef in cliDef.optionsDef
+        opt = defaultOption + optDef
+        optionsStr = optionsStr + char(10) + "--" + opt.name + " " + "-" + opt.alias + " "
+        if opt.arg then
+          optionsStr += devLib.Cli.formatArg(opt.arg)
+        else
+          optionsStr += "°"
+        end if
+        optionsStr = optionsStr + " " + opt.description.replace(" ", "¨")
+      end for
+      message += format_columns(optionsStr)
+      message = message.replace("¨", " ")
+      message = message.replace("°", " ")
+    end if
+    if cliDef.hasIndex("description") then
+      message = message + "\n\nDescription\n-----------\n" + cliDef.description
+    end if
+    return message
+  end function
 
-	exitHelp = function
-		exit(getHelpMessage)
-	end function
+  exitHelp = function
+    exit(getHelpMessage)
+  end function
 
-	getArgs = function
-		cliArgs = {}
-		argsFound = 0
-		nextIsOptArg = null
-		currentArg = null
+  getArgs = function
+    cliArgs = {}
+    argsFound = 0
+    nextIsOptArg = null
+    currentArg = null
 
-		for param in params
-			if param[0] == "-" then
-				if nextIsOptArg then exit("--" + currentArg.name + " option needs a <" + currentArg.arg.name + "> argument")
-				optionName = param[1 : ]
-				if optionName[0] == "-" then optionName = optionName[1 : ]
-				currentArg = cliDef.optionsDef.findMap({ "name": optionName })
-				if currentArg == null then currentArg = cliDef.optionsDef.findMap({ "alias": optionName })
-				if currentArg != null then
-					cliArgs[currentArg.name] = true
-					nextIsOptArg = currentArg.hasIndex("arg")
-				else
-					nextIsOptArg = null
-				end if
-			else
-				if nextIsOptArg then
-					cliArgs[currentArg.name] = param
-				else
-					if argsFound < cliDef.argsDef.len then
-						cliArgs[cliDef.argsDef[argsFound].name] = param
-						argsFound += 1
-					end if
-				end if
-				nextIsOptArg = null
-			end if
-		end for
+    for param in params
+      if param[0] == "-" then
+        if nextIsOptArg then exit("--" + currentArg.name + " option needs a <" + currentArg.arg.name + "> argument")
+        optionName = param[1 : ]
+        if optionName[0] == "-" then optionName = optionName[1 : ]
+        currentArg = cliDef.optionsDef.findMap({ "name": optionName })
+        if currentArg == null then currentArg = cliDef.optionsDef.findMap({ "alias": optionName })
+        if currentArg != null then
+          cliArgs[currentArg.name] = true
+          nextIsOptArg = currentArg.hasIndex("arg")
+        else
+          nextIsOptArg = null
+        end if
+      else
+        if nextIsOptArg then
+          cliArgs[currentArg.name] = param
+        else
+          if argsFound < cliDef.argsDef.len then
+            cliArgs[cliDef.argsDef[argsFound].name] = param
+            argsFound += 1
+          end if
+        end if
+        nextIsOptArg = null
+      end if
+    end for
 
-		if cliArgs.hasIndex("help") and cliArgs.help then
-			exitHelp
-		end if
+    if cliArgs.hasIndex("help") and cliArgs.help then
+      exitHelp
+    end if
 
-		for arg in cliDef.argsDef
-			if not cliArgs.hasIndex(arg.name) or not cliArgs[arg.name] then
-				if arg.hasIndex("default") then
-					cliArgs[arg.name] = arg.default
-				else
-					exit("<" + arg.name + "> argument needs a value")
-				end if
-			end if
-		end for
-		return cliArgs
-	end function
+    for arg in cliDef.argsDef
+      if not cliArgs.hasIndex(arg.name) or not cliArgs[arg.name] then
+        if arg.hasIndex("default") then
+          cliArgs[arg.name] = arg.default
+        else
+          exit("<" + arg.name + "> argument needs a value")
+        end if
+      end if
+    end for
+    return cliArgs
+  end function
 
-	cli.args = getArgs
-	cli.exitHelp = @exitHelp
-	cli.helpMessage = getHelpMessage
-	return cli
+  cli.args = getArgs
+  cli.exitHelp = @exitHelp
+  cli.helpMessage = getHelpMessage
+  return cli
 end function
 
 devLib.Cli = Cli

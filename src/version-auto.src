@@ -6,25 +6,25 @@
 hostComputer = get_shell.host_computer
 metaxploit = include_lib("/lib/metaxploit.so")
 if not metaxploit then
-	metaxploit = include_lib(current_path + "/metaxploit.so")
+  metaxploit = include_lib(current_path + "/metaxploit.so")
 end if
 if not metaxploit then
-	exit("Can't find metaxploit.so in /lib folder or current folder.")
+  exit("Can't find metaxploit.so in /lib folder or current folder.")
 end if
 import_code("dev-lib.src")
 
 cliDef = {
-	"argsDef": [ {
-		"name": "file",
-		"description": "Lib file to scan, absolute or in current folder",
-		"default": "",
-	} ],
-	"optionsDef": [ {
-		"name": "help",
-		"alias": "h",
-		"description": "Display help message",
-	} ],
-	"description": "If a path is given, given lib will be scan, if not all libs in /lib will be scan",
+  "argsDef": [ {
+    "name": "file",
+    "description": "Lib file to scan, absolute or in current folder",
+    "default": "",
+  } ],
+  "optionsDef": [ {
+    "name": "help",
+    "alias": "h",
+    "description": "Display help message",
+  } ],
+  "description": "If a path is given, given lib will be scan, if not all libs in /lib will be scan",
 }
 cliDef.usage = "version-auto [--options] " + devLib.Cli.formatArg(cliDef.argsDef[0])
 cli = devLib.Cli.init(cliDef)
@@ -37,22 +37,22 @@ args = cli.args
 // main
 
 if args.file then
-	lib = metaxploit.load(current_path + "/" + args.file)
-	if not lib then
-		lib = metaxploit.load("/lib/" + args.file)
-		if not lib then
-			exit("No lib given found in current path or /lib")
-		end if
-	end if
-	print(lib.lib_name + " = " + lib.version)
+  lib = metaxploit.load(current_path + "/" + args.file)
+  if not lib then
+    lib = metaxploit.load("/lib/" + args.file)
+    if not lib then
+      exit("No lib given found in current path or /lib")
+    end if
+  end if
+  print(lib.lib_name + " = " + lib.version)
 else
-	libFolder = hostComputer.File("/lib")
-	files = libFolder.get_files
-	for file in files
-		lib = metaxploit.load(file.path)
-		if not lib then
-			exit("No lib given found in current path or /lib")
-		end if
-		print(lib.lib_name + " = " + lib.version)
-	end for
+  libFolder = hostComputer.File("/lib")
+  files = libFolder.get_files
+  for file in files
+    lib = metaxploit.load(file.path)
+    if not lib then
+      exit("No lib given found in current path or /lib")
+    end if
+    print(lib.lib_name + " = " + lib.version)
+  end for
 end if
