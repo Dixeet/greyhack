@@ -12,16 +12,32 @@ import_code("dev-lib/dev-lib.src")
 
 cliDef = {
   "argsDef": [ {
-    "name": "output",
-    "description": "Output dump file path, absolute or current folder",
+    "name": "file",
+    "description": "wifi list file path. Create/override it with --dump",
     "default": "",
   } ],
-  "optionsDef": [ {
-    "name": "help",
-    "alias": "h",
-    "description": "Display help message",
-  } ],
-  "description": "If a path is given, all networks will be hacked and results will be dump into the file\nIf not select a network to hack",
+  "optionsDef": [
+    {
+      "name": "help",
+      "alias": "h",
+      "description": "Display help message",
+    },
+    {
+      "name": "dump",
+      "alias": "d",
+      "description": "Create/override file with the dumped wifi list",
+    },
+    {
+      "name": "interval",
+      "alias": "i",
+      "description": "Interval to wait between each switch",
+      "arg": {
+        "name": "int_in_sec",
+        "default": 60,
+      },
+    },
+  ],
+  "description": "If no file is given, select a wifi and auto hack it." + char(10) + "If a file is given:\n  - with --dump create or override the file\n  - switch beetwen each wifi at interval given by --interval [default: 60sec]",
 }
 cliDef.usage = "wifi-auto [--options] " + devLib.Cli.formatArg(cliDef.argsDef[0])
 cli = devLib.Cli.init(cliDef)
@@ -49,53 +65,55 @@ formatResults = function(networks = [])
   return format_columns(str)
 end function
 
+listWifi = function(printIt = true)
+  deviceNames = []
+  allNetworks = []
+  deviceList = computerNetworkDevices.split(char(10))
 
-// main
-deviceNames = []
-allNetworks = []
-deviceList = computerNetworkDevices.split(char(10))
-
-for device in deviceList
-  deviceName = device.split(" ")[0]
-  if deviceName != "" then deviceNames.push(deviceName)
-end for
-
-networksSelectStr = "# PWR% ESSID BSSID DEVICE"
-for deviceName in deviceNames
-  networks = get_shell.host_computer.wifi_networks(deviceName)
-  for network in networks
-    splitNetwork = network.split(" ")
-    network = {
-      "bssid": splitNetwork[0],
-      "power": splitNetwork[1][ : -1].to_int,
-      "essid": splitNetwork[2],
-      "device": deviceName,
-      "password": "",
-    }
-    allNetworks.push(network)
+  for device in deviceList
+    deviceName = device.split(" ")[0]
+    if deviceName != "" then deviceNames.push(deviceName)
   end for
-end for
-allNetworks.sort("power", 0)
-i = 1
-for network in allNetworks
-  networkStr = network.power + " " + network.essid + " " + network.bssid + " " + network.device
-  networksSelectStr = networksSelectStr + "\n" + i + ". " + networkStr
-  i = 1 + i
-end for
 
-print(format_columns(networksSelectStr))
+  networksSelectStr = "# PWR% ESSID BSSID DEVICE"
+  for deviceName in deviceNames
+    networks = get_shell.host_computer.wifi_networks(deviceName)
+    for network in networks
+      splitNetwork = network.split(" ")
+      network = {
+        "bssid": splitNetwork[0],
+        "power": splitNetwork[1][ : -1].to_int,
+        "essid": splitNetwork[2],
+        "device": deviceName,
+        "password": "",
+      }
+      allNetworks.push(network)
+    end for
+  end for
+  allNetworks.sort("power", 0)
+  i = 1
+  for network in allNetworks
+    networkStr = network.power + " " + network.essid + " " + network.bssid + " " + network.device
+    networksSelectStr = networksSelectStr + "\n" + i + ". " + networkStr
+    i = 1 + i
+  end for
+  if printIt then print(format_columns(networksSelectStr))
+  return allNetworks
+end function
 
-if args.output == "" then
+hackWifi = function(networks)
   selectedIndex = user_input("\nSelect Wifi: ").to_int - 1
 
-  if typeof(selectedIndex) == "string" or selectedIndex < 0 or selectedIndex > allNetworks.len - 1 then
+  if typeof(selectedIndex) == "string" or selectedIndex < 0 or selectedIndex > networks.len - 1 then
     exit("Wrong index selection!")
   end if
 
-  print("\n========\n" + formatResults([ findWifiPassword(allNetworks[selectedIndex]) ]))
+  print("\n========\n" + formatResults([ findWifiPassword(networks[selectedIndex]) ]))
   print("")
-else
-  parse = args.output.split("/")
+end function
+
+hackInBulk = function(networks, filePath)
+  parse = filePath.split("/")
   path = parse[ : -1].join("/")
   if not path then path = current_path
   file = parse[parse.len - 1]
@@ -107,11 +125,11 @@ else
 
   content = ""
   results = []
-  file = hostComputer.File(args.output)
+  file = hostComputer.File(filePath)
   i = 0
-  for network in allNetworks
+  for network in networks
     i = 1 + i
-    print("\nHack n°" + i + "/" + allNetworks.len)
+    print("\nHack n°" + i + "/" + networks.len)
     results.push(findWifiPassword(network))
     content = formatResults(results)
     setContent = file.set_content(content)
@@ -121,5 +139,55 @@ else
     print("\n========\n" + content)
     print("")
   end for
+end function
+
+switchAuto = function(filePath, interval = 60)
+  getNetwork = function(networks)
+    index = devLib.random(networks.len - 1)
+    return networks[index]
+  end function
+  fileContent = hostComputer.File(filePath).get_content
+  entries = fileContent.toCsv.split(char(10))
+  networks = []
+  for entry in entries
+    if entry == "ESSID,BSSID,PASSWORD,POWER,DEVICE" then continue
+    netParsed = entry.split(",")
+    network = {
+      "ESSID": netParsed[0],
+      "BSSID": netParsed[1],
+      "PASSWORD": netParsed[2],
+      "POWER": netParsed[3],
+      "DEVICE": netParsed[4],
+    }
+    networks.push(network)
+  end for
+
+  previousNetwork = null
+  while (true)
+    network = getNetwork(networks)
+    while network.ESSID == previousNetwork
+      network = getNetwork(networks)
+    end while
+    print(devLib.colors.green + "Connecting to " + network.ESSID)
+    previousNetwork = network.ESSID
+    hostComputer.connect_wifi(
+      network.DEVICE,
+      network.BSSID,
+      network.ESSID,
+      network.PASSWORD)
+    wait(interval.to_int)
+  end while
+
+end function
+
+
+// main
+if args.file == "" then
+  hackWifi(listWifi)
+else
+  if args.dump then
+    hackInBulk(listWifi, args.file)
+  else
+    switchAuto(args.file, args.interval)
+  end if
 end if
-exit

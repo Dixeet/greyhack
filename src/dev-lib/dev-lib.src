@@ -1,10 +1,25 @@
-/* 
-devLib
-Library for dev containing some helpers. To be imported
- */
+//devLib
+//Library for dev containing some helpers. To be imported
 
 devLib = {}
 
 #include "builtin-extends.src";
 #include "cli.src";
 devLib.Cli = Cli
+
+devLib.random = function(max, min = 0)
+  return floor(rnd * (max - min)) + min
+end function
+
+devLib.colors = {}
+devLib.colors.green = "<color=#81eb00>"
+devLib.colors.darkgreen = "<color=#007700>"
+devLib.colors.cyan = "<color=#0cddf2>"
+devLib.colors.blue = "<color=#3366ff>"
+devLib.colors.yellow = "<color=#dbd700>"
+devLib.colors.orange = "<color=#ffa500>"
+devLib.colors.magenta = "<color=#b0509e>"
+devLib.colors.red = "<color=#c30000>"
+devLib.colors.white = "<color=#eeeeee>"
+devLib.colors.lightgray = "<color=#b3b3b3>"
+devLib.colors.endcolor = "</color>"
