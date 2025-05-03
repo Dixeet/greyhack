@@ -1,30 +1,10 @@
-// devLib
-// Library for dev containing some helpers. To be imported
-// helpers:
-// - findMap: find a given map into a list
-// - createCli: return a cli object allowing you to generate args from params and --help
+/* 
+devLib
+Library for dev containing some helpers. To be imported
+ */
 
 devLib = {}
 
-findMap = function(mapToFind)
-  itemFound = null
-  for item in self.values
-    found = false
-    for attr in mapToFind.indexes
-      if item.hasIndex(attr) then
-        found = item[attr] == mapToFind[attr]
-      end if
-      if not found then break
-    end for
-    if found then
-      itemFound = item
-      break
-    end if
-  end for
-  return itemFound
-end function
-list.findMap = @findMap
-map.findMap = @findMap
-
+#include "builtin-extends.src";
 #include "cli.src";
 devLib.Cli = Cli

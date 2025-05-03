@@ -111,8 +111,8 @@ Cli.init = function(cliDef)
         if nextIsOptArg then exit("--" + currentArg.name + " option needs a <" + currentArg.arg.name + "> argument")
         optionName = param[1 : ]
         if optionName[0] == "-" then optionName = optionName[1 : ]
-        currentArg = cliDef.optionsDef.findMap({ "name": optionName })
-        if currentArg == null then currentArg = cliDef.optionsDef.findMap({ "alias": optionName })
+        currentArg = cliDef.optionsDef.find({ "name": optionName })
+        if currentArg == null then currentArg = cliDef.optionsDef.find({ "alias": optionName })
         if currentArg != null then
           cliArgs[currentArg.name] = true
           nextIsOptArg = currentArg.hasIndex("arg")
