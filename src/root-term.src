@@ -1,0 +1,6 @@
+shell = null
+while (shell == null)
+  pwd = user_input("Password: ", true)
+  shell = get_shell("root", pwd)
+end while
+shell.start_terminal
