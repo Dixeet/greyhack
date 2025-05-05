@@ -11,7 +11,7 @@ cliDef = {
   "argsDef": [ {
     "name": "source",
     "description": "Bin source folder path",
-    "default": home_dir + "/src/dev",
+    "default": home_dir + "/dev/bin",
   } ],
   "optionsDef": [ {
     "name": "help",
@@ -31,9 +31,21 @@ parseAndLink = function(folder)
     folders = folder.get_folders
     for file in files
       if file.is_binary == 1 then
+        linkPath = "/bin/" + file.name
+        targetFile = hostComputer.File(linkPath)
+        if targetFile then
+          if targetFile.is_symlink then
+            print(devLib.colors.cyan + linkPath + " symlink already exists. Deleting...")
+            hostComputer.File(linkPath).delete
+          else
+            print(devLib.colors.red + linkPath + " already exists and not a symlink. Skipping...")
+          end if
+        end if
         symResult = file.symlink("/bin", file.name)
         if typeof(symResult) == "string" then
-          print(file.name + " : " + symResult)
+          print(devLib.colors.red + file.name + " : " + symResult)
+        else
+          print(devLib.colors.green + linkPath + " --> " + file.path + " symlink created")
         end if
       end if
     end for
@@ -45,7 +57,7 @@ end function
 
 
 // main
-path = home_dir + "/src/dev"
+path = home_dir + "/dev/bin"
 if args.source then path = args.source
 folder = hostComputer.File(path)
 if folder == null or not folder.is_folder then exit("source path is not a folder")
