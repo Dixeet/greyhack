@@ -1,0 +1,17 @@
+getRootShell = function
+  if active_user == "root" then return get_shell
+  shell = null
+  while (shell == null)
+    pwd = user_input("Password: ", true)
+    shell = get_shell("root", pwd)
+  end while
+  return shell
+end function
+
+shell = getRootShell
+if active_user != "root" then
+  shell.start_terminal
+else
+  launch = shell.launch("/bin/5hell")
+  if launch != 1 then launch = shell.launch(current_path + "/5hell")
+end if
