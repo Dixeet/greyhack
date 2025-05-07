@@ -53,7 +53,7 @@ globals.HOME_SERVER = [
   "/root/rkit/tables/t5",
   1222,
 ]
-#include "5hell.config.src"
+#include "5hell.config.src";
 // you may set an ip without setting a password if you only want to use the @home alias to fetch the ip
 // for example with: rshell @home
 // @home will be replaced with your ip, no password needed in this case
@@ -106,24 +106,44 @@ command.shell = function(input = null, mute = null)
     // behold the magnificent 5hell prompt! thanks to anonymous and anarchic geniuses whose contributions made this possible
     // ////////////////// full prompt for better prompting //////////////////////
     if full_prompt then
-      angle = "<color=#FF0000>" + char(20057)
-      part1 = "<b><rotate=180><voffset=.70em>"
-      if not globals.GLASSPOOL then part2 = "</rotate></voffset><voffset=1em><size=75%><color=#E2DEDE>" else part2 = "</rotate></voffset><voffset=1em><size=75%><color=#2382FFFF>"
+      getPromptColor = function(default = "<color=#E2DEDE>")
+        color = default
+        if localmachine.public_ip == globals.HOME_SERVER[0] or localmachine.get_name == globals.HOME_CNAME then
+          color = colorGold
+        end if
+        if globals.GLASSPOOL then
+          color = colorLightBlue
+        end if
+        return color
+      end function
+
+      line1 = "<b><size=75%>" + getPromptColor
       user_level = globals.checkUser(localmachine)
       user_level_line = "<color=#00FF00><u></color>"
       if user_level == "root" then user_level_line = "<color=#FF0000><u></color>"
       if user_level == "guest" then user_level_line = "<color=#FFFFFF><u></color>"
-      // info works best with about 31-32 characters
-      info = "[" + localmachine.public_ip + "@" + localmachine.local_ip
-      pspace = "<cspace=-" + (info.len * 0.75) + "em>]</u>"
-      part3 = "</size></voffset><cspace=-.25em>"
-      scadoosh = "<color=#FFFFFFFF><b>|></b>"
+      info = "" + localmachine.public_ip + "@" + localmachine.local_ip + "</u>"
+      line1 = line1 + user_level_line + info + "</color></size></b>"
+
+      line2 = "<size=75%>" + colorCyan
+      l2Target = "x.x.x.x"
+      if globals.targetIP then l2Target = globals.targetIP
+      l2Target += ":"
+      if globals.targetPort == "router" then l2Target += "0" else l2Target += globals.targetPort
+      l2Meta = ""
+      if globals.net_session then l2Meta = char(187) + " "
+      if metaLib then l2Meta = " | " + l2Meta + metaLib.lib_name + " v" + metaLib.version
+      line2 = line2 + l2Target + l2Meta + "</color></size>"
+
+      line3 = ""
       user_guess = active_user
+      scadoosh = getPromptColor + "<b>|></b></color>"
       if globals.GLASSPOOL then
-        scadoosh = "<color=#2382FFFF>|></b>"
         user_guess = globals.checkUser(localmachine)
       end if
-      bang = part1 + angle + part2 + user_level_line + info + pspace + part3 + angle + "<voffset=-.25em>" + "></b></cspace><color=#E2DEDE><size=75%>" + user_guess + "@" + localmachine.get_name + ":" + currentPath + "</size>" + scadoosh + " "
+      line3 = "<size=75%><voffset=0.1em>" + line3 + user_guess + "@" + localmachine.get_name + ":" + currentPath + "</voffset></size>" + scadoosh + " "
+
+      bang = "<voffset=-0.7em>" + line1 + "<voffset=-1.7em>" + "<pos=0%>" + line2 + "</pos>" + "</voffset>" + "</voffset>" + char(10) + line3
     end if
     // //////////////////////// end full_prompt ////////////////////
     // glasspool prompt, edit to your liking
