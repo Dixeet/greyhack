@@ -1,0 +1,60 @@
+// command.my_func = function(arg1, arg2=0,arg3=0,arg4=0)
+// if arg1 == "help" or arg1 == "-h" then return "Usage: command -- info"
+// // code and additional functions
+// return 0  // or return soemthing
+// end function
+
+command.dump = function(arg1)
+  if arg1 == "help" or arg1 == "-h" then return "<b>Dump</b>" + char(10) + "Usage: dump [<path>]"
+  if not is_valid_ip(HOME_SERVER[0]) then return "transmit: error: please set @home ip in 5hell.src"
+  remote = shell.connect_service(
+    HOME_SERVER[0],
+    HOME_SERVER[1],
+    HOME_SERVER[2],
+    HOME_SERVER[3],
+    HOME_SERVER[4])
+  if typeof(remote) != "shell" and typeof(remote) != "ftpshell" then return 
+  if not arg1 then
+    arg1 = user_input("Home path [default: " + globals.CUSTOM.DUMP_PATH + "]: <enter>")
+    if not arg1 then arg1 = globals.CUSTOM.DUMP_PATH
+  end if
+  source_shell = get_shell
+  // get source_shell home folder
+  s_home = source_shell.host_computer.File("/home")
+  if not s_home then return "error: /home does not exist!"
+  // find all non-folder binaries except police/student/employees viewer and traffic viewer
+  bin_buf = []
+  tcatch = command.tree("-f", source_shell) // results are sent to globals.enumerated
+  if tcatch == "tree: invalid path or file" then return tcatch
+  print(colorCyan + "Fetching readable binaries...")
+  for f in globals.enumerated
+    if f.is_binary and not f.is_folder and f.has_permission("r") and f.parent.parent.path == "/home" then bin_buf.push(f)
+    // or exclude certain files:
+    // is_blacklisted = function(name)
+    // if name == "StudentViewer.exe" then return 1
+    // if name == "EmployeeViewr.exe" then return 1
+    // if name == "....." then return 1
+    // end function
+    // if not is_blacklisted(f.name) and if f.is_binary and not f.is_folder and f.has_permission("r") then bin_buf.push(f)
+  end for
+  // find system.log
+  print(colorCyan + "</b>Fetching system.log if readable...")
+  sysl = source_shell.host_computer.File("/var/system.log")
+  if not sysl then
+    print(colorOrange + "/var/system.log not found!")
+  else
+    if sysl.has_permission("r") then bin_buf.push(sysl)
+  end if
+  // scp download all files to dest folder of active shell
+  // -- warn if glasspool is active
+  // if globals.GLASSPOOL then print(colorOrange + "Warning: Glasspool is active:" + char(10) + colorOrange + "Files will be written to the glasspooled machine.")
+  for entry in bin_buf
+    if typeof(entry) == "file" then source_file = entry.path else continue
+    print(command.scpm(
+      "-u",
+      source_file,
+      arg1,
+      remote))
+  end for
+  return colorCyan + "Binaries Fetched."
+end function

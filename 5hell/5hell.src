@@ -108,7 +108,7 @@ command.shell = function(input = null, mute = null)
     if full_prompt then
       getPromptColor = function(default = "<color=#E2DEDE>")
         color = default
-        if localmachine.public_ip == globals.HOME_SERVER[0] or localmachine.get_name == globals.HOME_CNAME then
+        if localmachine.public_ip == globals.HOME_SERVER[0] or localmachine.get_name == globals.CUSTOM.HOME_CNAME then
           color = colorGold
         end if
         if globals.GLASSPOOL then
@@ -379,6 +379,7 @@ if DEBUG then print("<size=75%>loading customizations (if any)...</size>")
 
 // ///////////////////////////////////////////////////////////////////////////////////////////
 // or
+import_code("custom.5pk")
 // 
 // imp*cde ( "/path/your.5pk")   // where your.5pk contains your function in the above format
 // *note the .5pk extension is just a convention and not a hard requirement.
