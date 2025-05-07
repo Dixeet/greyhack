@@ -9,3 +9,4 @@ gen
 multi
 community
 build
+.env
