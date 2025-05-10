@@ -2730,7 +2730,7 @@ command.hashim = function(arg1, arg2, arg3 = 0, arg4 = 0)
                 p = spl[1]
                 if h == hash then
                   print("Hashim: " + user + ":" + colorWhite + p + CT + " found in " + (time - time_s) + " seconds.")
-                  cache.push(user + ":" + p)
+                  cache.push(user + " : " + p)
                   found = true
                   continue
                   if h.len != 32 then print(colorRed + "hashim: t5 table error: entry is not 32 characters" + char(10) + line + char(10) + "Line: " + lines.indexOf(line))
@@ -2744,7 +2744,7 @@ command.hashim = function(arg1, arg2, arg3 = 0, arg4 = 0)
             password = crypto.decipher(hash)
             if password then
               print("Hashim: " + user + ":" + colorWhite + password + CT + " found in " + (time - time_s) + " seconds.")
-              cache.push(user + ":" + password)
+              cache.push(user + " : " + password)
               found = true
               continue
             end if
@@ -2754,7 +2754,7 @@ command.hashim = function(arg1, arg2, arg3 = 0, arg4 = 0)
           print(colorRed + "Hash not found: unknown: " + hash + CT)
           cache.push(user + ":unknown")
         end for
-        last_read = cache.join(char(10))
+        last_read = "------------" + char(10) + cache.join(char(10))
         if daemon then print("Sending: " + char(10) + last_read)
         if daemon then swap_file.set_content(last_read)
         print("Saving to dump.txt...")
